@@ -1,5 +1,14 @@
 let transactions = [];
 let myChart;
+let transactionStore;
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").then(reg => {
+      console.log("We found your service worker file!", reg);
+    });
+  });
+}
 
 fetch("/api/transaction")
   .then(response => {
@@ -23,6 +32,17 @@ function populateTotal() {
   let totalEl = document.querySelector("#total");
   totalEl.textContent = total;
 }
+
+// open indexed db
+const dbRequest = window.indexedDB.open("budgetTracker", 1)
+dbRequest.onupgradeneeded = event => {
+  const db = event.target.result;
+  db.createObjectStore("budgetTracker", {keyPath: "name"});
+  transactionStore = db.createObjectStore("budgetTracker", {keyPath: "name"});
+  // transactionStore.createIndex("transactionIndex", "transactionName")
+}
+
+
 
 function populateTable() {
   let tbody = document.querySelector("#tbody");
@@ -113,7 +133,6 @@ function sendTransaction(isAdding) {
   populateTotal();
   
   // also send to server
-  console.log(transaction);
   fetch("/api/transaction", {
     method: "POST",
     body: JSON.stringify(transaction),
@@ -138,6 +157,7 @@ function sendTransaction(isAdding) {
   .catch(err => {
     // fetch failed, so save in indexed db
     saveRecord(transaction);
+    console.log("I am hit dawhg");
 
     // clear form
     nameEl.value = "";
