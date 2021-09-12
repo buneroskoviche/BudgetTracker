@@ -2,10 +2,6 @@ const router = require("express").Router();
 const path = require("path");
 const Transaction = require("../models/transaction.js");
 
-router.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-})
-
 router.post("/api/transaction", ({body}, res) => {
   Transaction.create(body)
     .then(dbTransaction => {
