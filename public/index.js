@@ -7,7 +7,8 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-fetch("/api/transaction")
+const fetchData = () => {
+  fetch("/api/transaction")
   .then(response => {
     return response.json();
   })
@@ -18,7 +19,8 @@ fetch("/api/transaction")
     populateTotal();
     populateTable();
     populateChart();
-});
+  }); 
+}
 
 // open indexed db and create if needed
 const dbOpenRequest = window.indexedDB.open("budgetTracker", 1)
@@ -39,16 +41,14 @@ dbOpenRequest.onsuccess = () => {
     if(data.length === 0) {
       // if no data is stored, exit
       console.log('No stored transactions found');
-      return;
+      return fetchData();
     } else if(data.length > 1) {
       // do a bulk create if there is more than 1 stored transaction
       urlToFetch = '/api/transaction/bulk';
-      data.forEach(entry => transactions.push(entry));
     } else {
       // otherwise, do a basic post request
       urlToFetch = '/api/transaction';
       data = data[0];
-      transactions.push(data)
     }
 
     // send the cached data
@@ -60,7 +60,7 @@ dbOpenRequest.onsuccess = () => {
         Accept: "application/json, text/plain, */*",
         "Content-Type": "application/json"
       }
-    })
+    }).then(_response => fetchData());
     // remove the cached data
     transactionStore.clear();
   }
