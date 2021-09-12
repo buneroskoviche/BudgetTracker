@@ -37,7 +37,6 @@ function populateTotal() {
 const dbRequest = window.indexedDB.open("budgetTracker", 1)
 dbRequest.onupgradeneeded = event => {
   const db = event.target.result;
-  db.createObjectStore("budgetTracker", {keyPath: "name"});
   transactionStore = db.createObjectStore("budgetTracker", {keyPath: "name"});
   // transactionStore.createIndex("transactionIndex", "transactionName")
 }
