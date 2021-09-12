@@ -1,12 +1,9 @@
 let transactions = [];
 let myChart;
-let transactionStore;
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js").then(reg => {
-      console.log("We found your service worker file!", reg);
-    });
+    navigator.serviceWorker.register("service-worker.js")
   });
 }
 
@@ -33,14 +30,12 @@ function populateTotal() {
   totalEl.textContent = total;
 }
 
-// open indexed db
-const dbRequest = window.indexedDB.open("budgetTracker", 1)
-dbRequest.onupgradeneeded = event => {
+// open indexed db and create if needed
+const dbOpenRequest = window.indexedDB.open("budgetTracker", 1)
+dbOpenRequest.onupgradeneeded = event => {
   const db = event.target.result;
-  transactionStore = db.createObjectStore("budgetTracker", {keyPath: "name"});
-  // transactionStore.createIndex("transactionIndex", "transactionName")
+  db.createObjectStore("budgetTracker", {keyPath: "name"});
 }
-
 
 
 function populateTable() {
@@ -171,3 +166,16 @@ document.querySelector("#add-btn").onclick = function() {
 document.querySelector("#sub-btn").onclick = function() {
   sendTransaction(false);
 };
+
+const saveRecord = (record) => {
+  const dbAddRequest = window.indexedDB.open("budgetTracker", 1)
+  dbAddRequest.onsuccess = () => {
+    const db = dbAddRequest.result;
+    const transaction = db.transaction(["budgetTracker"], "readwrite");
+    const transactionStore = transaction.objectStore("budgetTracker");
+
+    console.log('Record saved!', record);
+    transactionStore.add(record);
+  }
+  
+}

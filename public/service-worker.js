@@ -58,4 +58,9 @@ self.addEventListener("fetch", function(evt) {
 
         return
     }
+    evt.respondWith(
+        caches.match(evt.request).then(function(response) {
+          return response || fetch(evt.request);
+        })
+    );
 });
