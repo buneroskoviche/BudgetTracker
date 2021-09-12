@@ -18,7 +18,7 @@ fetch("/api/transaction")
     populateTotal();
     populateTable();
     populateChart();
-  });
+});
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -35,6 +35,38 @@ const dbOpenRequest = window.indexedDB.open("budgetTracker", 1)
 dbOpenRequest.onupgradeneeded = event => {
   const db = event.target.result;
   db.createObjectStore("budgetTracker", {keyPath: "name"});
+}
+dbOpenRequest.onsuccess = () => {
+  const db = dbOpenRequest.result;
+  const transaction = db.transaction(["budgetTracker"], "readwrite");
+  const transactionStore = transaction.objectStore("budgetTracker");
+  //get all stored transactions
+  const getAll = transactionStore.getAll();
+  getAll.onsuccess = () => {
+    let data = getAll.result
+    let urlToFetch;
+    // determine variables for the fetch
+    if(data.length === 0) {
+      console.log('No data found');
+      return;
+    } else if(data.length > 1) {
+      urlToFetch = '/api/transaction/bulk';
+    } else {
+      urlToFetch = '/api/transaction';
+      data = data[0];
+    }
+    // send the cached data
+    fetch(urlToFetch, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      }
+    })
+    // remove the cached data
+    transactionStore.clear();
+  }
 }
 
 
@@ -151,7 +183,6 @@ function sendTransaction(isAdding) {
   .catch(err => {
     // fetch failed, so save in indexed db
     saveRecord(transaction);
-    console.log("I am hit dawhg");
 
     // clear form
     nameEl.value = "";
