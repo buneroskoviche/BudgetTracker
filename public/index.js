@@ -39,7 +39,7 @@ dbOpenRequest.onsuccess = () => {
     let urlToFetch;
 
     if(data.length === 0) {
-      // if no data is stored, exit
+      // if no data is stored, fetch and exit
       console.log('No stored transactions found');
       return fetchData();
     } else if(data.length > 1) {
@@ -60,6 +60,7 @@ dbOpenRequest.onsuccess = () => {
         Accept: "application/json, text/plain, */*",
         "Content-Type": "application/json"
       }
+      // get the data with the newly added transactions
     }).then(_response => fetchData());
     // remove the cached data
     transactionStore.clear();
