@@ -20,16 +20,6 @@ fetch("/api/transaction")
     populateChart();
 });
 
-function populateTotal() {
-  // reduce transaction amounts to a single total value
-  let total = transactions.reduce((total, t) => {
-    return total + parseInt(t.value);
-  }, 0);
-
-  let totalEl = document.querySelector("#total");
-  totalEl.textContent = total;
-}
-
 // open indexed db and create if needed
 const dbOpenRequest = window.indexedDB.open("budgetTracker", 1)
 dbOpenRequest.onupgradeneeded = event => {
@@ -38,24 +28,31 @@ dbOpenRequest.onupgradeneeded = event => {
 }
 dbOpenRequest.onsuccess = () => {
   const db = dbOpenRequest.result;
-  const transaction = db.transaction(["budgetTracker"], "readwrite");
-  const transactionStore = transaction.objectStore("budgetTracker");
+  const dbTransaction = db.transaction(["budgetTracker"], "readwrite");
+  const transactionStore = dbTransaction.objectStore("budgetTracker");
   //get all stored transactions
   const getAll = transactionStore.getAll();
   getAll.onsuccess = () => {
     let data = getAll.result
     let urlToFetch;
-    // determine variables for the fetch
+
     if(data.length === 0) {
-      console.log('No data found');
+      // if no data is stored, exit
+      console.log('No stored transactions found');
       return;
     } else if(data.length > 1) {
+      // do a bulk create if there is more than 1 stored transaction
       urlToFetch = '/api/transaction/bulk';
+      data.forEach(entry => transactions.push(entry));
     } else {
+      // otherwise, do a basic post request
       urlToFetch = '/api/transaction';
       data = data[0];
+      transactions.push(data)
     }
+
     // send the cached data
+    console.log('Sending data to server');
     fetch(urlToFetch, {
       method: "POST",
       body: JSON.stringify(data),
@@ -69,6 +66,15 @@ dbOpenRequest.onsuccess = () => {
   }
 }
 
+function populateTotal() {
+  // reduce transaction amounts to a single total value
+  let total = transactions.reduce((total, t) => {
+    return total + parseInt(t.value);
+  }, 0);
+
+  let totalEl = document.querySelector("#total");
+  totalEl.textContent = total;
+}
 
 function populateTable() {
   let tbody = document.querySelector("#tbody");
